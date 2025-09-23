@@ -1,0 +1,15 @@
+# Core GUI and Graphics
+PyOpenGL
+PyOpenGL-accelerate
+glfw
+slimgui
+
+# Memory manipulation and process access
+pymem
+psutil
+
+# Beatmap parsing
+slider
+
+# System and utilities (Windows only)
+ctypes-windows-sdk; sys_platform == "win32"

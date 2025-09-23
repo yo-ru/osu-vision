@@ -1,0 +1,28 @@
+from enum import unique, IntEnum
+
+@unique
+class OsuMode(IntEnum):
+    MENU = 0
+    EDIT = 1
+    PLAY = 2
+    EXIT = 3
+    SELECTEDIT = 4
+    SELECTPLAY = 5
+    SELECTDRAWINGS = 6
+    RANK = 7
+    UPDATE = 8
+    BUSY = 9
+    UNKNOWN = 10
+    LOBBY = 11
+    MATCHSETUP = 12
+    SELECTMULTIPLAYER = 13
+    RANKINGVS = 14
+    ONLINESELECTION = 15
+    OPTIONSOFFSETWIZARD = 16
+    RANKINGTAGCOOP = 17
+    RANKINGTEAM = 18
+    BEATMAPIMPORT = 19
+    PACKAGEUPDATER = 20
+    BENCHMARK = 21
+    TOURNEY = 22
+    CHARTS = 23

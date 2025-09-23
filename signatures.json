@@ -1,0 +1,59 @@
+{
+    "signatures": [
+      {
+        "name": "Player::Instance",
+        "pattern": "80 3D ?? ?? ?? ?? 00 75 26 A1 ?? ?? ?? ?? 85 C0 74 0C",
+        "rva": true,
+        "offset": 10
+      },
+      {
+        "name": "Player::Mode",
+        "pattern": "A1 ? ? ? ? A3 ? ? ? ? A1 ? ? ? ? 89 86",
+        "rva": true,
+        "offset": 11
+      },
+      {
+        "name": "Player::Retrying",
+        "pattern": "8B CE FF 15 ? ? ? ? C6 05 ? ? ? ? 00",
+        "rva": true,
+        "offset": 10
+      },
+      {
+        "name": "Player::Failed",
+        "pattern": "8B 15 ? ? ? ? 89 90 ? ? ? ? 80 3D ? ? ? ? 00 74 57 80 3D",
+        "rva": true,
+        "offset": 14
+      },
+      {
+        "name": "GameBase::Time",
+        "pattern": "80 3D ? ? ? ? 00 74 1B A1 ? ? ? ? 2B 05 ? ? ? ? 3D",
+        "rva": true,
+        "offset": 10
+      },
+      {
+        "name": "GameBase::Mode",
+        "pattern": "80 B8 ? ? ? ? 00 75 19 A1 ? ? ? ? 83 F8 0B 74 0B",
+        "rva": true,
+        "offset": 10
+      },
+      {
+        "name": "AudioEngine::Time",
+        "pattern": "D9 58 2C 8B 3D ? ? ? ? 8B 1D",
+        "rva": true,
+        "offset": 11
+      },
+      {
+        "name": "Base",
+        "pattern": "F8 01 74 04 83 65",
+        "rva": true,
+        "offset": 0
+      },
+      {
+        "name": "Rulesets",
+        "pattern": "7D 15 A1 ?? ?? ?? ?? 85 C0",
+        "rva": true,
+        "offset": 0
+      }
+    ]
+  }
+  
