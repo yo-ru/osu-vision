@@ -94,7 +94,7 @@ class Feature:
 
         visible, _ = slimgui.begin("TaikoMania Playfield", False, flags)
         if visible:
-            if Player.loaded and Player.mode == GameMode.TAIKO and GameBase.mode == OsuMode.PLAY:
+            if Player.mode == GameMode.TAIKO and GameBase.mode == OsuMode.PLAY:
                 current_path = Beatmap.path
                 if current_path != self._current_beatmap_path:
                     self._current_beatmap_path = current_path
