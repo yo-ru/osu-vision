@@ -6,7 +6,6 @@ An external cheat for osu!
 
 - Only supports stable.
 - A few bugs with note generation.
-- Player must first load a beatmap at least once.
 
 - A decently fleshed out SDK for further feature development (I don't know why you'd want to work on this.)
 - A lot of the SDK is in a rough state, I never really cleaned it up.
@@ -35,6 +34,7 @@ An external cheat for osu!
 
 ## Requirements
 - `Python 3.13.7`
+- [requirements.txt](https://github.com/yo-ru/osu-vision/blob/main/requirements.txt)
 
 ## Installation
 1. Install `Python 3.13.7`
@@ -44,6 +44,5 @@ An external cheat for osu!
 
 ## Usage
 1. Open osu!
-2. Find a random beatmap and enter it (you can exit right after- this is just to initialize needed memory.)
-3. Run `python3.13 main.py`
-4. Profit?
+2. Run `python3.13 main.py`
+3. Profit?
