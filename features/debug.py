@@ -33,6 +33,7 @@ class DebugFeature:
                 slimgui.text(f"Retrying: {Player.retrying}")
                 slimgui.new_line()
                 slimgui.text(f"Beatmap:")
+                slimgui.text(f"Path: {Beatmap.path}")
                 slimgui.text(f"Name: {Beatmap.artist} - {Beatmap.title} [{Beatmap.difficulty}]")
                 slimgui.text(f"Creator: {Beatmap.creator}")
                 slimgui.text(f"Map ID: {Beatmap.map_id}")
