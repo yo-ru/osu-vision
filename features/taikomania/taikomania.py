@@ -2,10 +2,10 @@ from re import L
 import slimgui.imgui as slimgui
 
 from sdk.ui.manager import register_feature
-from sdk.memory import AudioEngine, Beatmap, Player, GameBase
+from sdk.memory import AudioEngine, Beatmap, Player, GameBase, GamePlay
 from sdk.beatmap.wrapper import load_beatmap
 from sdk.beatmap.objects import TaikoHit, TaikoDrumroll, TaikoSwell
-from sdk.constants import GameMode, OsuMode
+from sdk.constants import GameMode, OsuMode, Mods
 
 from .stage import Stage, TaikoManiaObjectType
 
@@ -109,10 +109,23 @@ class Feature:
                 self._initialized = False
         slimgui.end()
 
+    def get_normalized_scroll_speed(self) -> float:
+        """Get normalized scroll speed that compensates for speed mods"""
+        try:
+            mods = GamePlay.mods
+            if mods & Mods.DOUBLETIME or mods & Mods.NIGHTCORE:
+                return self.scroll_speed / 1.5
+            elif mods & Mods.HALFTIME:
+                return self.scroll_speed / 0.75
+            else:
+                return self.scroll_speed
+        except:
+            return self.scroll_speed
+
     def render_objects(self, time: int):
         is_rect = self.note_style == 1
         stage_spacing = self.stage_spacing
-        scroll_speed = self.scroll_speed
+        scroll_speed = self.get_normalized_scroll_speed()
         katsu_color = slimgui.color_convert_float4_to_u32(self.katsu_color)
         don_color = slimgui.color_convert_float4_to_u32(self.don_color)
 

@@ -1,10 +1,10 @@
 import slimgui.imgui as slimgui
 
 from sdk.ui.manager import register_feature
-from sdk.memory import AudioEngine, Beatmap, Player, GameBase
+from sdk.memory import AudioEngine, Beatmap, Player, GameBase, GamePlay
 from sdk.beatmap.wrapper import load_beatmap
 from sdk.beatmap.objects import ManiaHit, ManiaHold
-from sdk.constants import GameMode, OsuMode
+from sdk.constants import GameMode, OsuMode, Mods
 
 from .stage import Stage
 
@@ -103,13 +103,26 @@ class Feature:
                 self._initialized = False
         slimgui.end()
 
+    def get_normalized_scroll_speed(self) -> float:
+        """Get normalized scroll speed that compensates for speed mods"""
+        try:
+            mods = GamePlay.mods
+            if mods & Mods.DOUBLETIME or mods & Mods.NIGHTCORE:
+                return self.scroll_speed / 1.5
+            elif mods & Mods.HALFTIME:
+                return self.scroll_speed / 0.75
+            else:
+                return self.scroll_speed
+        except:
+            return self.scroll_speed
+
     def render_objects(self, time: int):
         if not self.stages or self.key_count == 0:
             return
 
         is_rect = self.note_style == 1
         stage_spacing = self.stage_spacing
-        scroll_speed = self.scroll_speed
+        scroll_speed = self.get_normalized_scroll_speed()
         note_color = slimgui.color_convert_float4_to_u32(self.note_color)
         ln_head_color = slimgui.color_convert_float4_to_u32(self.ln_head_color)
         ln_body_color = slimgui.color_convert_float4_to_u32(self.ln_body_color)
