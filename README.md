@@ -22,6 +22,17 @@ An external cheat for osu!
 - Don Color
 - Katsu Color
 
+### Mania
+- Note Style: `Circle, Rectangle`
+- Scroll Speed: `0.1-3.0`
+- Stage Spacing: `5-30`
+- Offset: `-100-100`
+- Note Color
+- LN Head Color
+- LN Body Color
+- LN Tail: `[ ]` Enable/Disable LN Tail
+- LN Tail Color
+
 ## Why release it?
 - I plan on rewriting the entire project in C++.
 - Further development in Python is just a major pain in the ass for what I want to do.
