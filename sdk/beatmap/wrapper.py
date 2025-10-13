@@ -1,4 +1,5 @@
 import os
+import math
 from typing import Optional, List, Dict, Any
 from pathlib import Path
 
@@ -44,8 +45,87 @@ class Beatmap:
         if not os.path.exists(path):
             raise FileNotFoundError(f"Beatmap file not found: {path}")
         
-        slider_beatmap = SliderBeatmap.from_path(path)
+        # Check if this is a mania beatmap and use custom parsing
+        with open(path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Check if it's a mania beatmap
+        if 'Mode: 3' in content:
+            slider_beatmap = cls._from_path_mania(path, content)
+        else:
+            slider_beatmap = SliderBeatmap.from_path(path)
+        
         return cls(slider_beatmap)
+    
+    @classmethod
+    def _from_path_mania(cls, path: str, content: str) -> 'SliderBeatmap':
+        """Custom mania beatmap parser to handle hold notes correctly."""
+        lines = content.split('\n')
+        fixed_lines = []
+        hold_end_times = {}
+        
+        in_hit_objects = False
+        for line in lines:
+            if line.strip() == '[HitObjects]':
+                in_hit_objects = True
+                fixed_lines.append(line)
+                continue
+            elif line.strip().startswith('[') and line.strip() != '[HitObjects]':
+                in_hit_objects = False
+            
+            if in_hit_objects and line.strip():
+                # Parse hit object line
+                parts = line.strip().split(',')
+                if len(parts) >= 5:
+                    try:
+                        x = int(parts[0])
+                        y = int(parts[1])
+                        start_time = int(parts[2])
+                        type_code = int(parts[3])
+                        
+                        # Check if this is a hold note (type 128)
+                        if type_code & 128:
+                            # Extract end time from extras (last part after |)
+                            extras = parts[5] if len(parts) > 5 else ""
+                            if ':' in extras:
+                                end_time_str = extras.split(':')[0]
+                                try:
+                                    end_time = int(end_time_str)
+                                    # Store the hold note data
+                                    key = (x, y, start_time)
+                                    hold_end_times[key] = end_time
+                                    
+                                    # Convert to slider format for slider library
+                                    temp_type = (type_code & ~128) | 2  # Replace hold bit with slider bit
+                                    fixed_line = f"{parts[0]},{parts[1]},{parts[2]},{temp_type},{parts[4]},L|0:0,1,100"
+                                    fixed_lines.append(fixed_line)
+                                    continue
+                                except ValueError:
+                                    pass
+                        else:
+                            # Regular note - store for manual parsing to avoid slider library transformation
+                            hit_sound = int(parts[4]) if len(parts) > 4 else 0
+                            key = (x, y, start_time)
+                            hold_end_times[key] = (x, hit_sound, 0)  # 0 = regular note
+                    except (ValueError, IndexError):
+                        pass
+            
+            fixed_lines.append(line)
+        
+        # Parse with slider library using fixed content
+        fixed_content = '\n'.join(fixed_lines)
+        
+        try:
+            slider_beatmap = SliderBeatmap.parse(fixed_content)
+            # Store the hold end times in the beatmap instance
+            slider_beatmap._mania_hold_end_times = hold_end_times
+            # Convert to a list for queue-based processing
+            slider_beatmap._mania_coordinate_queue = list(hold_end_times.items())
+            return slider_beatmap
+        except Exception as e:
+            print(f"Error loading beatmap: {e}")
+            # Fallback to regular parsing
+            return SliderBeatmap.from_path(path)
     
     @classmethod
     def from_string(cls, content: str) -> 'Beatmap':
@@ -169,14 +249,83 @@ class Beatmap:
     def _convert_to_mania(self, slider_obj, start_time: int, end_time: Optional[int],
                          x: int, hit_sound: HitSound, type_code: int) -> Optional[HitObject]:
         """Convert to mania-specific objects."""
-        # Calculate column from x position (assuming 7K for now)
-        key_count = 7
-        column = min(int(x / (512 / key_count)), key_count - 1)
+        # Get key count from circle size (CS directly maps to key count in mania)
+        key_count = int(self._beatmap.circle_size) if self._beatmap.circle_size else 4
+        # Calculate column using the same formula as beatmap_parser.py
+        column = int(math.floor((x * key_count) / 512.0))
+        column = max(0, min(column, key_count - 1))  # Clamp to valid range
         
-        if type_code & 2 and end_time:  # Slider -> ManiaHold
-            return ManiaHold(start_time, end_time, column, key_count, hit_sound)
-        else:  # Circle -> ManiaHit (spinners don't exist in mania)
-            return ManiaHit(start_time, column, key_count, hit_sound)
+        # Process column assignment
+        
+        # Check if we have stored original coordinates from mania parsing
+        # Use queue-based approach to process in order
+        stored_key = None
+        stored_data = None
+        
+        # Get stored data from the slider beatmap if available
+        hold_end_times = getattr(self._beatmap, '_mania_hold_end_times', {})
+        coordinate_queue = getattr(self._beatmap, '_mania_coordinate_queue', [])
+        
+        # Try queue-based approach first (process in order)
+        found_stored = False
+        if coordinate_queue:
+            # Pop the next item from the queue
+            stored_key, stored_data = coordinate_queue.pop(0)
+            found_stored = True
+        
+        # Fallback to timing-based matching if queue is empty
+        if not found_stored:
+            # Find any note with same start_time that hasn't been used yet
+            for key, data in hold_end_times.items():
+                if key[2] == start_time:  # Match by start_time (third element)
+                    stored_key = key
+                    stored_data = data
+                    found_stored = True
+                    break
+            
+            # If no exact match, try to find closest timing match (within 2ms)
+            if not found_stored:
+                closest_key = None
+                closest_data = None
+                min_diff = float('inf')
+                for key, data in hold_end_times.items():
+                    time_diff = abs(key[2] - start_time)
+                    if time_diff <= 2 and time_diff < min_diff:
+                        min_diff = time_diff
+                        closest_key = key
+                        closest_data = data
+                
+                if closest_key:
+                    stored_key = closest_key
+                    stored_data = closest_data
+                    found_stored = True
+        
+        if found_stored and stored_key is not None:
+            if isinstance(stored_data, int):
+                # This is a hold note with stored end time
+                end_time = stored_data
+                # Use the original coordinates from the stored key
+                original_x = stored_key[0]
+                original_column = int(math.floor((original_x * key_count) / 512.0))
+                original_column = max(0, min(original_column, key_count - 1))
+                # Remove used key to prevent reuse (important for jacks)
+                if stored_key in hold_end_times:
+                    del hold_end_times[stored_key]
+                return ManiaHold(start_time, end_time, original_column, key_count, hit_sound)
+            elif isinstance(stored_data, tuple) and len(stored_data) == 3:
+                # This is a regular note with stored original coordinates
+                original_x, original_hit_sound, note_type = stored_data
+                # Recalculate column using original coordinates (matching beatmap_parser.py approach)
+                original_column = int(math.floor((original_x * key_count) / 512.0))
+                original_column = max(0, min(original_column, key_count - 1))
+                original_hit_sound_obj = HitSound(original_hit_sound) if original_hit_sound else HitSound.NORMAL
+                # Remove used key to prevent reuse (important for jacks)
+                if stored_key in hold_end_times:
+                    del hold_end_times[stored_key]
+                return ManiaHit(start_time, original_column, key_count, original_hit_sound_obj)
+        
+        # Fallback to slider library coordinates (shouldn't happen with proper mania parsing)
+        return ManiaHit(start_time, column, key_count, hit_sound)
     
     def _convert_to_standard(self, slider_obj, start_time: int, end_time: Optional[int],
                             x: int, y: int, hit_sound: HitSound, type_code: int) -> Optional[HitObject]:
