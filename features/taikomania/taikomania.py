@@ -11,15 +11,15 @@ from .stage import Stage, TaikoManiaObjectType
 
 class Feature:
     def __init__(self):
-        self.show_window = True
-        self.show_playfield = True
+        self.show_window = False
+        self.show_playfield = False
 
         self.note_style = 0
         self.playstyle = 0
-        self._2k_finisher = True
-        self.alternate_bpm = 100
-        self.scroll_speed = 1.0
-        self.stage_spacing = 10
+        self._2k_finisher = False
+        self.alternate_bpm = 0
+        self.scroll_speed = 2.2
+        self.stage_spacing = 5
         self.offset = 0
         self.don_color = (255/255.0, 83/255.0, 72/255.0, 1.0)  # Normalized RGBA
         self.katsu_color = (133/255.0, 195/255.0, 236/255.0, 1.0)  # Normalized RGBA
