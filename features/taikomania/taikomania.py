@@ -139,8 +139,8 @@ class Feature:
         window_pos = slimgui.get_window_pos()
         playfield_height = window_height
         scroll_distance = (
-            (playfield_height - object_size[1] / 2 - stage_spacing - playfield_height / 30) -
-            (window_pos[1] - object_size[1] /2)
+            (window_height - object_size[1] / 2 - stage_spacing - window_height / 30) -
+            (window_pos[1] - object_size[1] / 2)
         )
         
         for i, stage in enumerate(self.stages):
@@ -151,12 +151,8 @@ class Feature:
                     continue
 
                 t = (time - (object_time - (750 / scroll_speed))) / (750 / scroll_speed)
-                
-                # Calculate hit zone Y position (center of where receptors are drawn)
-                hit_zone_y = window_pos[1] + window_height - object_size[1] / 2 - stage_spacing - window_height / 30
-                # Calculate Y position from top of window to hit zone center
-                y_center = (window_pos[1] + object_size[1] / 2) + (hit_zone_y - (window_pos[1] + object_size[1] / 2)) * t
-                
+
+                y_center = (window_pos[1] - object_size[1] / 2) + scroll_distance * t
 
                 if is_rect:
                     draw_list.add_rect_filled(
