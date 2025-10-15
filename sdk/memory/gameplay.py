@@ -201,6 +201,34 @@ class GamePlay(Base):
             return self.memory.read_csharp_string32(self.memory.read_int(score_ptr + 0x28))
         except:
             return ""
+
+    @property
+    def hit_errors(self) -> list:
+        try:
+            rulesets_ptr = self.memory.resolve_pointer_chain("Rulesets", [-0xb, 0x4])
+            gameplay_ptr = self.memory.resolve_pointer_chain("Rulesets", [-0xb, 0x4, 0x68])
+            score_ptr = self.memory.resolve_pointer_chain("Rulesets", [-0xb, 0x4, 0x68, 0x38])
+            if not rulesets_ptr or not gameplay_ptr or not score_ptr:
+                return []
+
+            leader_start = 0x8
+
+            base = self.memory.read_int(score_ptr + 0x38)
+            items = self.memory.read_int(base + 0x4)
+            size = self.memory.read_int(base + 0xc)
+
+            errors = []
+            for i in range(size):
+                current = items + leader_start + 0x4 * i
+                error = self.memory.read_int(current)
+
+                errors.append(error)
+
+            return errors
+
+        except:
+            return []
+    
     @property
     def unstable_rate(self) -> float:
         base_ur = self._calculate_ur()
@@ -228,3 +256,23 @@ class GamePlay(Base):
         variance /= len(self.hit_errors)
 
         return math.sqrt(variance) * 10
+
+    @property
+    def od_offset(self) -> float:
+        from sdk.memory import Beatmap
+
+        match self.mode:
+            case GameMode.TAIKO:
+                mod_od = Beatmap.od
+
+                if self.mods & Mods.EASY:
+                    mod_od /= 2
+                elif self.mods & Mods.HARDROCK:
+                    mod_od = min(Beatmap.od * 1.4, 10)
+
+                return (50 - 3 * mod_od) / 2
+            
+            case GameMode.MANIA:
+                return 16 / 2
+
+        return ((159 - 12 * Beatmap.od) / 2) / 2

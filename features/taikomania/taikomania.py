@@ -104,7 +104,7 @@ class Feature:
                     self.initialize()
                     self._initialized = True
                 
-                self.render_objects(AudioEngine.time + self.offset)
+                self.render_objects(AudioEngine.time + self.offset + GamePlay.od_offset)
             else:
                 self._initialized = False
         slimgui.end()
@@ -217,6 +217,8 @@ class Feature:
         last_katsu_time = INT_MIN
         is_last_don_stage_primary = False
         is_last_katsu_stage_primary = False
+        is_don_stage_primary = True
+        is_katsu_stage_primary = True
 
         beatmap = load_beatmap(Beatmap.path)
         if not beatmap:
@@ -227,9 +229,6 @@ class Feature:
             if isinstance(hit_object, TaikoHit):
                 object_type = TaikoManiaObjectType.KATSU if hit_object.is_katsu else TaikoManiaObjectType.DON
                 is_large = hit_object.is_large and self._2k_finisher
-
-                is_don_stage_primary = True
-                is_katsu_stage_primary = True
 
                 if ((is_large or object_type == TaikoManiaObjectType.DON) and 
                     last_don_time != INT_MIN and
