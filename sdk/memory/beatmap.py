@@ -161,23 +161,17 @@ class Beatmap(Base):
     def od_offset(self) -> float:
         from sdk.memory import GamePlay
 
-        match GamePlay.mode:
-            case GameMode.TAIKO:
-                mod_od = self.od
+        if GamePlay.mode == GameMode.TAIKO:
+            mod_od = self.od
 
-                if GamePlay.mods & Mods.EASY:
-                    mod_od /= 2
-                elif GamePlay.mods & Mods.HARDROCK:
-                    mod_od = min(self.od * 1.4, 10)
+            if GamePlay.mods & Mods.EASY:
+                mod_od /= 2
+            elif GamePlay.mods & Mods.HARDROCK:
+                mod_od = min(self.od * 1.4, 10)
 
-                # TODO: account for DT/NC/HT
+            return mod_od
 
-                return (50 - 3 * mod_od) / 2 # 8
-            
-            case GameMode.MANIA:
-                return 2 # 16 / 8 == 2 ???
-
-        return ((159 - 12 * self.od) / 2) / 8
+        return self.od
     
     @property
     def audio_filename(self) -> str:

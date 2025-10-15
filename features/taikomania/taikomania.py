@@ -64,7 +64,7 @@ class Feature:
                 slimgui.separator()
 
                 # Experimental
-                _, self.od_offset = slimgui.checkbox("OD Offset", self.od_offset)
+                _, self.od_offset = slimgui.checkbox("Experimental OD Offset", self.od_offset)
                 if slimgui.is_item_hovered():
                     slimgui.set_tooltip("Enable/Disable Exerimental OD Offset")
             slimgui.end()
@@ -113,7 +113,7 @@ class Feature:
                     self.initialize()
                     self._initialized = True
                 
-                self.render_objects(AudioEngine.time + self.offset + Beatmap.od_offset if self.od_offset else 0)
+                self.render_objects(AudioEngine.time + self.offset + (Beatmap.od_offset if self.od_offset else 0))
             else:
                 self._initialized = False
         slimgui.end()
