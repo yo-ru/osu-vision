@@ -235,25 +235,19 @@ class GamePlay(Base):
         base_ur = self._calculate_ur()
 
         if self.mods & Mods.DOUBLETIME or self.mods & Mods.NIGHTCORE:
-            return base_ur / 1.5
+            base_ur *= 1.5
         elif self.mods & Mods.HALFTIME:
-            return base_ur * 1.33
-        return base_ur
+            base_ur *= 1.33
+
+        return round(base_ur, 2)
 
     def _calculate_ur(self) -> float:
-        if len(self.hit_errors) < 1:
+        if len(self.hit_errors) < 2: # 2 hits min to calculate variance (spread)
             return 0.
 
-        total_all = 0.
-        
-        for hit in self.hit_errors: # TODO: we shouldn't do this every time
-            total_all += hit
-        
-        average = total_all / len(self.hit_errors)
-        variance = 0.
+        average = sum(self.hit_errors) / len(self.hit_errors)
 
-        for hit in self.hit_errors:
-            variance += math.pow(hit - average, 2)
+        variance = sum(math.pow(hit - average, 2) for hit in self.hit_errors)
         variance /= len(self.hit_errors)
 
         return math.sqrt(variance) * 10
