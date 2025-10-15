@@ -1,3 +1,4 @@
+from functools import cached_property
 import math
 from . import Base
 from ..constants import Mods, GameMode
@@ -257,7 +258,8 @@ class GamePlay(Base):
 
         return math.sqrt(variance) * 10
 
-    @property
+    
+    @cached_property
     def od_offset(self) -> float:
         from sdk.memory import Beatmap
 
@@ -270,9 +272,9 @@ class GamePlay(Base):
                 elif self.mods & Mods.HARDROCK:
                     mod_od = min(Beatmap.od * 1.4, 10)
 
-                return (50 - 3 * mod_od) / 2
+                return (50 - 3 * mod_od) / 4
             
             case GameMode.MANIA:
-                return 16 / 2
+                return 16 / 4
 
-        return ((159 - 12 * Beatmap.od) / 2) / 2
+        return ((159 - 12 * Beatmap.od) / 2) / 4

@@ -18,7 +18,7 @@ class Feature:
         self.playstyle = 0
         self._2k_finisher = False
         self.alternate_bpm = 0
-        self.scroll_speed = 2.2
+        self.scroll_speed = 2.0
         self.stage_spacing = 5
         self.offset = 0
         self.don_color = (255/255.0, 83/255.0, 72/255.0, 1.0)  # Normalized RGBA
@@ -107,6 +107,7 @@ class Feature:
                 self.render_objects(AudioEngine.time + self.offset + GamePlay.od_offset)
             else:
                 self._initialized = False
+                if "od_offset" in GamePlay.__dict__: del GamePlay.od_offset # reset od_offset cache for next map
         slimgui.end()
 
     def get_normalized_scroll_speed(self) -> float:
