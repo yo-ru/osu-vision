@@ -242,12 +242,12 @@ class GamePlay(Base):
         return round(base_ur, 2)
 
     def _calculate_ur(self) -> float:
-        if len(self.hit_errors) < 2: # 2 hits min to calculate variance (spread)
+        try:
+            average = sum(self.hit_errors) / len(self.hit_errors)
+
+            variance = sum(math.pow(hit - average, 2) for hit in self.hit_errors)
+            variance /= len(self.hit_errors)
+
+            return math.sqrt(variance) * 10
+        except ZeroDivisionError:
             return 0.
-
-        average = sum(self.hit_errors) / len(self.hit_errors)
-
-        variance = sum(math.pow(hit - average, 2) for hit in self.hit_errors)
-        variance /= len(self.hit_errors)
-
-        return math.sqrt(variance) * 10
