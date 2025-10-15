@@ -1,3 +1,4 @@
+import math
 from . import Base
 from ..constants import Mods, GameMode
 
@@ -200,3 +201,30 @@ class GamePlay(Base):
             return self.memory.read_csharp_string32(self.memory.read_int(score_ptr + 0x28))
         except:
             return ""
+    @property
+    def unstable_rate(self) -> float:
+        base_ur = self._calculate_ur()
+
+        if self.mods & Mods.DOUBLETIME or self.mods & Mods.NIGHTCORE:
+            return base_ur / 1.5
+        elif self.mods & Mods.HALFTIME:
+            return base_ur * 1.33
+        return base_ur
+
+    def _calculate_ur(self) -> float:
+        if len(self.hit_errors) < 1:
+            return 0.
+
+        total_all = 0.
+        
+        for hit in self.hit_errors: # TODO: we shouldn't do this every time
+            total_all += hit
+        
+        average = total_all / len(self.hit_errors)
+        variance = 0.
+
+        for hit in self.hit_errors:
+            variance += math.pow(hit - average, 2)
+        variance /= len(self.hit_errors)
+
+        return math.sqrt(variance) * 10

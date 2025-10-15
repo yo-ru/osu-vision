@@ -5,7 +5,7 @@ from sdk.ui.manager import register_feature
 from sdk.memory import GameBase, AudioEngine, Beatmap, Player, GamePlay
 from sdk.constants import OsuMode
 
-class DebugFeature:
+class Feature:
     def __init__(self):
         self.show_window = False
 
@@ -57,9 +57,10 @@ class DebugFeature:
                     slimgui.text(f"HitMiss: {GamePlay.hitMiss}")
                     slimgui.text(f"Combo: {GamePlay.combo}")
                     slimgui.text(f"Max Combo: {GamePlay.max_combo}")
+                    slimgui.text(f"Unstable Rate: {GamePlay.unstable_rate}")
             slimgui.end()
             self.show_window = open_state
 
 
 # Register the feature
-register_feature(DebugFeature())
+register_feature(Feature())
