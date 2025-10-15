@@ -24,6 +24,8 @@ class Feature:
         self.don_color = (255/255.0, 83/255.0, 72/255.0, 1.0)  # Normalized RGBA
         self.katsu_color = (133/255.0, 195/255.0, 236/255.0, 1.0)  # Normalized RGBA
 
+        self.od_offset = False
+
         # primary katsu, secondary katsu, primary don, secondary don
         self.stages = [Stage(TaikoManiaObjectType.KATSU), Stage(TaikoManiaObjectType.KATSU), Stage(TaikoManiaObjectType.DON), Stage(TaikoManiaObjectType.DON)]
 
@@ -49,7 +51,7 @@ class Feature:
             if visible:
                 _, self.note_style = slimgui.combo("Note Style", self.note_style, ["Circle", "Rectangle"])
                 _, self.playstyle = slimgui.combo("Playstyle", self.playstyle, ["KDDK", "DKKD", "KKDD", "DDKK", "KDKD", "DKDK"])
-                _, self._2k_finisher = slimgui.checkbox("2K Finisher", self._2k_finisher) # TODO: tooltip
+                _, self._2k_finisher = slimgui.checkbox("2K Finisher", self._2k_finisher)
                 if slimgui.is_item_hovered():
                     slimgui.set_tooltip("Splits finishers into two notes, using both keys instead of one.")
                 _, self.alternate_bpm = slimgui.slider_int("Alternate BPM", self.alternate_bpm, 0, 500, flags=slimgui.SliderFlags.CLAMP_ON_INPUT)
@@ -58,6 +60,13 @@ class Feature:
                 _, self.offset = slimgui.slider_int("Offset (ms)", self.offset, -100, 100, flags=slimgui.SliderFlags.CLAMP_ON_INPUT)
                 _, self.don_color = slimgui.color_edit4("Don Color", self.don_color, flags=slimgui.ColorEditFlags.NO_INPUTS)
                 _, self.katsu_color = slimgui.color_edit4("Katsu Color", self.katsu_color, flags=slimgui.ColorEditFlags.NO_INPUTS)
+                
+                slimgui.separator()
+
+                # Experimental
+                _, self.od_offset = slimgui.checkbox("OD Offset", self.od_offset)
+                if slimgui.is_item_hovered():
+                    slimgui.set_tooltip("Enable/Disable Exerimental OD Offset")
             slimgui.end()
             self.show_window = open_state
 
@@ -104,10 +113,9 @@ class Feature:
                     self.initialize()
                     self._initialized = True
                 
-                self.render_objects(AudioEngine.time + self.offset + GamePlay.od_offset)
+                self.render_objects(AudioEngine.time + self.offset + Beatmap.od_offset if self.od_offset else 0)
             else:
                 self._initialized = False
-                if "od_offset" in GamePlay.__dict__: del GamePlay.od_offset # reset od_offset cache for next map
         slimgui.end()
 
     def get_normalized_scroll_speed(self) -> float:
@@ -138,20 +146,21 @@ class Feature:
         object_size = (object_radius * 2, object_radius if is_rect else object_radius * 2)
 
         window_pos = slimgui.get_window_pos()
-        playfield_height = window_height
         scroll_distance = (
             (window_height - object_size[1] / 2 - stage_spacing - window_height / 30) -
             (window_pos[1] - object_size[1] / 2)
         )
+
+        note_vis_ms = 750 / scroll_speed
         
         for i, stage in enumerate(self.stages):
             x_center = window_pos[0] + stage_spacing + i * (window_width / 4) + object_size[0] / 2
             
             for object_time in stage.objects:
-                if time >= object_time or time < object_time - (750 * 1.2) / scroll_speed:
+                if time >= object_time or time < object_time - note_vis_ms:
                     continue
 
-                t = (time - (object_time - (750 / scroll_speed))) / (750 / scroll_speed)
+                t = (time - (object_time - note_vis_ms)) / note_vis_ms
 
                 y_center = (window_pos[1] - object_size[1] / 2) + scroll_distance * t
 
