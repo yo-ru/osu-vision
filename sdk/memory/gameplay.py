@@ -191,7 +191,7 @@ class GamePlay(Base):
         except:
             return 0
     
-    @property
+    @cached_property
     def player_name(self) -> str:
         try:
             # [[[Rulesets - 0xb] + 0x4] + 0x68] + 0x38] + 0x28]
@@ -251,24 +251,3 @@ class GamePlay(Base):
         variance /= len(self.hit_errors)
 
         return math.sqrt(variance) * 10
-
-    
-    @cached_property
-    def od_offset(self) -> float:
-        from sdk.memory import Beatmap
-
-        match self.mode:
-            case GameMode.TAIKO:
-                mod_od = Beatmap.od
-
-                if self.mods & Mods.EASY:
-                    mod_od /= 2
-                elif self.mods & Mods.HARDROCK:
-                    mod_od = min(Beatmap.od * 1.4, 10)
-
-                return (50 - 3 * mod_od) / 8
-            
-            case GameMode.MANIA:
-                return 2 # 16 / 8 == 2 ???
-
-        return ((159 - 12 * Beatmap.od) / 2) / 8

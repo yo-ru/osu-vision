@@ -1,5 +1,8 @@
 import os
 import psutil
+
+from sdk.constants.gamemodes import GameMode
+from sdk.constants.mods import Mods
 from . import Base
 
 class Beatmap(Base):
@@ -150,9 +153,31 @@ class Beatmap(Base):
             if not beatmap_ptr:
                 return 0.0
             # [[Beatmap + 0x38]
-            return round(self.memory.read_float(beatmap_ptr + 0x38), 1)
+            return round(self.memory.read_float(beatmap_ptr + 0x38), 2)
         except:
             return 0.0
+
+    @property
+    def od_offset(self) -> float:
+        from sdk.memory import GamePlay
+
+        match GamePlay.mode:
+            case GameMode.TAIKO:
+                mod_od = self.od
+
+                if GamePlay.mods & Mods.EASY:
+                    mod_od /= 2
+                elif GamePlay.mods & Mods.HARDROCK:
+                    mod_od = min(self.od * 1.4, 10)
+
+                # TODO: account for DT/NC/HT
+
+                return (50 - 3 * mod_od) / 2 # 8
+            
+            case GameMode.MANIA:
+                return 2 # 16 / 8 == 2 ???
+
+        return ((159 - 12 * self.od) / 2) / 8
     
     @property
     def audio_filename(self) -> str:

@@ -2,7 +2,7 @@ import slimgui.imgui as slimgui
 
 from sdk.ui.manager import register_feature
 
-from sdk.memory import GameBase, AudioEngine, Beatmap, Player, GamePlay
+from sdk.memory import GameBase, GamePlay
 from sdk.constants import OsuMode
 
 class Feature:
