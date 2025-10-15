@@ -39,6 +39,7 @@ def main():
     # import features (auto-register on import)
     import features.taikomania.taikomania
     import features.mania.mania
+    import features.gameplay
     import features.debug
 
     # main loop
