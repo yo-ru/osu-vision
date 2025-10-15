@@ -275,6 +275,6 @@ class GamePlay(Base):
                 return (50 - 3 * mod_od) / 8
             
             case GameMode.MANIA:
-                return 2 # 16 / 8 == 1 ???
+                return 2 # 16 / 8 == 2 ???
 
         return ((159 - 12 * Beatmap.od) / 2) / 8
