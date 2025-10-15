@@ -272,9 +272,9 @@ class GamePlay(Base):
                 elif self.mods & Mods.HARDROCK:
                     mod_od = min(Beatmap.od * 1.4, 10)
 
-                return (50 - 3 * mod_od) / 4
+                return (50 - 3 * mod_od) / 16
             
             case GameMode.MANIA:
-                return 16 / 4
+                return 1 # 16 / 16 == 1 ???
 
-        return ((159 - 12 * Beatmap.od) / 2) / 4
+        return ((159 - 12 * Beatmap.od) / 2) / 16
