@@ -43,7 +43,7 @@ class Feature:
 
     def draw_windows(self):
         if self.show_window:
-            slimgui.set_next_window_size((400, 170))
+            slimgui.set_next_window_size((0,0))
             visible, open_state = slimgui.begin("Mania Settings", True, flags=slimgui.WindowFlags.NO_RESIZE)
             if visible:
                 _, self.note_style = slimgui.combo("Note Style", self.note_style, ["Circle", "Rectangle"])
