@@ -27,14 +27,42 @@ class Feature:
         }
         self.judge_text = ""
         self.judge_timer = 0.0
+        
+        # Cache frequently accessed values
+        self._cached_combo = 0
+        self._cached_mode = None
+        self._cached_game_mode = None
+        
+        # Cache judgement strings to avoid repeated string creation
+        self.judgement_strings = {
+            'hit300': "PERFECT",
+            'hit100': "GOOD", 
+            'hit50': "BAD",
+            'hitGeki': "MARVELOUS",
+            'hitKatu': "GREAT",
+            'hitMiss': "MISS"
+        }
 
-    def update_judgement_tracking(self):
-        """Check for changes in hit counts and update judgement display"""
+    def get_cached_combo(self):
+        """Get combo value with caching - only reads memory when mode changes"""
+        current_mode = GameBase.mode
+        if current_mode != self._cached_mode:
+            self._cached_mode = current_mode
+            self._cached_combo = GamePlay.combo if current_mode == OsuMode.PLAY else 0
+        elif current_mode == OsuMode.PLAY:
+            # Only update combo if we're in play mode
+            new_combo = GamePlay.combo
+            if new_combo != self._cached_combo:
+                self._cached_combo = new_combo
+        return self._cached_combo
+
+    def get_cached_hit_counts(self):
+        """Get hit counts with change detection - only reads when needed"""
         if GameBase.mode != OsuMode.PLAY:
-            return
+            return self.last_hit_counts
             
-        # Get current hit counts
-        current_counts = {
+        # Only read memory if we're in play mode
+        return {
             'hit300': GamePlay.hit300,
             'hit100': GamePlay.hit100,
             'hit50': GamePlay.hit50,
@@ -42,24 +70,20 @@ class Feature:
             'hitKatu': GamePlay.hitKatu,
             'hitMiss': GamePlay.hitMiss
         }
+
+    def update_judgement_tracking(self):
+        """Check for changes in hit counts and update judgement display"""
+        if GameBase.mode != OsuMode.PLAY:
+            return
+            
+        # Get current hit counts using cached method
+        current_counts = self.get_cached_hit_counts()
         
         # Check for changes and determine the judgement type
         for hit_type, current_count in current_counts.items():
             if current_count > self.last_hit_counts[hit_type]:
-                # Hit count increased, show judgement
-                if hit_type == 'hit300':
-                    self.judge_text = "MARVELOUS"
-                elif hit_type == 'hit100':
-                    self.judge_text = "GREAT"
-                elif hit_type == 'hit50':
-                    self.judge_text = "OK"
-                elif hit_type == 'hitGeki':
-                    self.judge_text = "GEKI"
-                elif hit_type == 'hitKatu':
-                    self.judge_text = "KATU"
-                elif hit_type == 'hitMiss':
-                    self.judge_text = "MISS"
-                
+                # Hit count increased, show judgement using cached string
+                self.judge_text = self.judgement_strings[hit_type]
                 self.judge_timer = 0.15 # duration
                 break
         
@@ -77,52 +101,15 @@ class Feature:
         self.show_window = not self.show_window
 
     def draw_windows(self):
-        # Update judgement tracking
-        self.update_judgement_tracking()
+        # Only update judgement tracking if judgements are enabled
+        if self.show_judge:
+            self.update_judgement_tracking()
         
         if self.show_window:
             # Gameplay Settings
             slimgui.set_next_window_size((0,0))
             visible, open_state = slimgui.begin("Gameplay Settings", True, flags=slimgui.WindowFlags.NO_RESIZE)
             if visible:
-                # slimgui.text(f"GameBase:")
-                # slimgui.text(f"State: {GameBase.mode.name}")
-                # slimgui.text(f"Time: {GameBase.time}")
-                # slimgui.new_line()
-                # slimgui.text(f"AudioEngine:")
-                # slimgui.text(f"Time: {AudioEngine.time}")
-                # slimgui.new_line()
-                # slimgui.text(f"Player:")
-                # slimgui.text(f"Gamemode: {Player.mode.name}")
-                # slimgui.text(f"Loaded: {Player.loaded}")
-                # slimgui.text(f"Failed: {Player.failed}")
-                # slimgui.text(f"Retrying: {Player.retrying}")
-                # slimgui.new_line()
-                # slimgui.text(f"Beatmap:")
-                # slimgui.text(f"Path: {Beatmap.path}")
-                # slimgui.text(f"Name: {Beatmap.artist} - {Beatmap.title} [{Beatmap.difficulty}]")
-                # slimgui.text(f"Creator: {Beatmap.creator}")
-                # slimgui.text(f"Map ID: {Beatmap.map_id}")
-                # slimgui.text(f"Set ID: {Beatmap.set_id}")
-                # slimgui.text(f"AR: {Beatmap.ar} | CS: {Beatmap.cs}")
-                # slimgui.text(f"HP: {Beatmap.hp} | OD: {Beatmap.od}")
-                # slimgui.new_line()
-                # if GameBase.mode == OsuMode.PLAY:
-                #     slimgui.text(f"Gameplay:")
-                #     slimgui.text(f"Gamemode: {GamePlay.mode.name}")
-                #     slimgui.text(f"Player Name: {GamePlay.player_name}")
-                #     slimgui.text(f"Mods: {GamePlay.mods.name}")
-                #     slimgui.text(f"Score: {GamePlay.score}")
-                #     slimgui.text(f"HP: {GamePlay.hp}")
-                #     slimgui.text(f"Accuracy: {GamePlay.accuracy}")
-                #     slimgui.text(f"Hit100: {GamePlay.hit100}")
-                #     slimgui.text(f"Hit300: {GamePlay.hit300}")
-                #     slimgui.text(f"Hit50: {GamePlay.hit50}")
-                #     slimgui.text(f"HitGeki: {GamePlay.hitGeki}")
-                #     slimgui.text(f"HitKatu: {GamePlay.hitKatu}")
-                #     slimgui.text(f"HitMiss: {GamePlay.hitMiss}")
-                #     slimgui.text(f"Combo: {GamePlay.combo}")
-                #     slimgui.text(f"Max Combo: {GamePlay.max_combo}")
                 dY = slimgui.get_io().display_size[1] - 120
 
 
@@ -148,7 +135,9 @@ class Feature:
                     slimgui.WindowFlags.NO_BACKGROUND              |
                     slimgui.WindowFlags.NO_COLLAPSE                |
                     slimgui.WindowFlags.NO_FOCUS_ON_APPEARING      |
-                    slimgui.WindowFlags.NO_MOVE
+                    slimgui.WindowFlags.NO_MOVE                    |
+                    slimgui.WindowFlags.NO_INPUTS                  |
+                    slimgui.WindowFlags.NO_NAV_INPUTS
                 )
 
                 slimgui.set_next_window_size((0, 0))
@@ -156,7 +145,7 @@ class Feature:
                 visible, open_state = slimgui.begin("Combo", False, flags)
                 if visible:
                     slimgui.push_font(None, 50)
-                    slimgui.text(f"{GamePlay.combo if GameBase.mode == OsuMode.PLAY else "0"}")
+                    slimgui.text(f"{self.get_cached_combo()}")
                     slimgui.pop_font()
                 slimgui.end()
 
@@ -168,7 +157,9 @@ class Feature:
                     slimgui.WindowFlags.NO_BACKGROUND              |
                     slimgui.WindowFlags.NO_COLLAPSE                |
                     slimgui.WindowFlags.NO_FOCUS_ON_APPEARING      |
-                    slimgui.WindowFlags.NO_MOVE
+                    slimgui.WindowFlags.NO_MOVE                    |
+                    slimgui.WindowFlags.NO_INPUTS                  |
+                    slimgui.WindowFlags.NO_NAV_INPUTS
                 )
 
                 slimgui.set_next_window_size((0, 0))

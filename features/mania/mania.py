@@ -28,6 +28,50 @@ class Feature:
 
         self._current_beatmap_path = ""
         self._initialized = False
+        
+        # Cache frequently accessed values
+        self._cached_player_mode = None
+        self._cached_game_mode = None
+        self._cached_beatmap_path = ""
+        self._cached_mods = None
+
+    def get_cached_game_state(self):
+        """Get game state with caching - only reads memory when values change"""
+        # Cache player mode
+        current_player_mode = Player.mode
+        if current_player_mode != self._cached_player_mode:
+            self._cached_player_mode = current_player_mode
+        
+        # Cache game mode  
+        current_game_mode = GameBase.mode
+        if current_game_mode != self._cached_game_mode:
+            self._cached_game_mode = current_game_mode
+            
+        # Cache beatmap path
+        current_beatmap_path = Beatmap.path
+        if current_beatmap_path != self._cached_beatmap_path:
+            self._cached_beatmap_path = current_beatmap_path
+            
+        return (
+            self._cached_player_mode == GameMode.MANIA and 
+            self._cached_game_mode == OsuMode.PLAY,
+            self._cached_beatmap_path
+        )
+
+    def get_cached_mods(self):
+        """Get mods with caching"""
+        if self._cached_game_mode == OsuMode.PLAY:
+            new_mods = GamePlay.mods
+            if new_mods != self._cached_mods:
+                self._cached_mods = new_mods
+        return self._cached_mods
+
+    def invalidate_cache(self):
+        """Invalidate all caches when settings change"""
+        self._cached_player_mode = None
+        self._cached_game_mode = None
+        self._cached_beatmap_path = ""
+        self._cached_mods = None
 
     # Top-level menu entry
     def get_menu(self):
@@ -88,8 +132,9 @@ class Feature:
 
         visible, _ = slimgui.begin("Mania Playfield", False, flags)
         if visible:
-            if Player.mode == GameMode.MANIA and GameBase.mode == OsuMode.PLAY:
-                current_path = Beatmap.path
+            is_in_game, current_path = self.get_cached_game_state()
+            
+            if is_in_game:
                 if current_path != self._current_beatmap_path:
                     self._current_beatmap_path = current_path
                     self._initialized = False
@@ -106,7 +151,7 @@ class Feature:
     def get_normalized_scroll_speed(self) -> float:
         """Get normalized scroll speed that compensates for speed mods"""
         try:
-            mods = GamePlay.mods
+            mods = self.get_cached_mods()
             if mods & Mods.DOUBLETIME or mods & Mods.NIGHTCORE:
                 return self.scroll_speed / 1.5
             elif mods & Mods.HALFTIME:
