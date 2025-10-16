@@ -33,6 +33,12 @@ An external cheat for osu!
 - LN Tail: `[ ]` Enable/Disable LN Tail
 - LN Tail Color
 
+### Gameplay
+- Enable Combo: `[ ]` Enable/Disable Combo Counter
+- Combo Y: `125-...`
+- Enable Judgements: `[ ]` Enable/Disable Judgement Indicator
+- Judgement Y: `125-...`
+
 ## Why release it?
 - I plan on rewriting the entire project in C++.
 - Further development in Python is just a major pain in the ass for what I want to do.
